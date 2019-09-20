@@ -17,10 +17,12 @@ import requests
 from faker import Faker
 from captcha_solver import CaptchaSolver
 from selenium import webdriver
-from selenium.webdriver import ActionChains
+from selenium.webdriver import ActionChains, Proxy
 from selenium.webdriver.common.keys import Keys
 
 # 2Captcha API key here
+from selenium.webdriver.common.proxy import ProxyType
+
 from proxy_auth import manifest_json, background_js, plugin_file
 
 API_2_CAPTCHA = '6ed35827f9a7e40e1c1acb767f8aa5e3'
@@ -225,17 +227,27 @@ class OutlookAccountCreator:
     def __open_browser(use_proxy: bool = False):
         # TODO: add user agent
         chrome_options = webdriver.ChromeOptions()
+        capabilities = webdriver.DesiredCapabilities.CHROME
         if use_proxy:
             random_proxy = Proxies.get_random_proxy()
             # Parse Proxy
-            auth, ip_port = random_proxy.split('@')
-            user, pwd = auth.split(':')
-            ip, port = ip_port.split(':')
+            if '@' in random_proxy:
+                auth, ip_port = random_proxy.split('@')
+                user, pwd = auth.split(':')
+                ip, port = ip_port.split(':')
 
-            with zipfile.ZipFile(plugin_file, 'w') as zp:
-                zp.writestr("manifest.json", manifest_json)
-                zp.writestr("background.js", background_js % (ip, port, user, pwd))
-            chrome_options.add_extension(plugin_file)
+                with zipfile.ZipFile(plugin_file, 'w') as zp:
+                    zp.writestr("manifest.json", manifest_json)
+                    zp.writestr("background.js", background_js % (ip, port, user, pwd))
+                chrome_options.add_extension(plugin_file)
+            else:
+                prox = Proxy()
+                prox.proxy_type = ProxyType.MANUAL
+                prox.http_proxy = random_proxy
+                prox.socks_proxy = random_proxy
+                prox.ssl_proxy = random_proxy
+                capabilities = webdriver.DesiredCapabilities.CHROME
+                prox.add_to_capabilities(capabilities)
 
         return webdriver.Chrome(chrome_options=chrome_options)
 

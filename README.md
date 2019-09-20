@@ -27,3 +27,6 @@ account_creator = OutlookAccountCreator(use_proxy=True)
 account_creator.create_account()
 # Account created
 ```
+Proxy file should have proxies in one of these formats:
+- user:pass@ip:port
+- ip:port
